@@ -76,7 +76,7 @@ class Display:
         index = 0
         for char in string:
             strUpToNow += char
-            subSurf = pygame.Surface(((self.width * (index + 1) * self.fontspace * 1.05), self.height * 0.025))
+            subSurf = pygame.Surface(((self.width * (index + 1) * self.fontspace * 1.025), self.height * 0.025), pygame.SRCALPHA)
             self.FONT.render_to(subSurf, (0, 0), strUpToNow, color)
             subSurface[index] = subSurf
             index += 1
@@ -85,10 +85,10 @@ class Display:
             for holder in range(0, increaseTime[-1]+1):
                 if holder in increaseTime:
                     strUpToNow += "."
-                subSurf = pygame.Surface(((self.width * (index + 1) * self.fontspace * 1.05), self.height * 0.025))
+                    index += 1
+                subSurf = pygame.Surface(((self.width * (index + 1) * self.fontspace * 1.025), self.height * 0.025), pygame.SRCALPHA)
                 self.FONT.render_to(subSurf, (0, 0), strUpToNow, color)
                 subSurface[index] = subSurf
-                index += 1
         return subSurface
 
     def fakeSleep(self, fakeTime):
@@ -104,6 +104,7 @@ class Display:
 
     def generateDisplay(self, menu="Main"):
         self.SCREEN.blit(self.backgroundIMG, (0, 0))
+        savedBackground = self.SCREEN.copy()
         if menu == "Main":
             self.SCREEN.blit(self.overlayTint, (int(self.width*0.2), int(self.height*0.175)))
 
@@ -115,6 +116,16 @@ class Display:
             copiedSurf = self.SCREEN.copy()
             indexArr = []
             progressBarPercent = 0
+            tickMark = 0
+
+            def oscillatingBarGlow(color, cycle):
+                newColor = []
+                for rgbIndex in range(0, 3):
+                    newC = color[rgbIndex] + pow(20 - rgbIndex * 5, 1.25) * math.sin(cycle/(2*math.pi))
+                    newC = min(max(int(newC), 0), 255)
+                    newColor.append(newC)
+                return newColor
+
             for index in subSurface:
                 indexArr.append(index)
             for index in range(0, len(indexArr)):
@@ -124,8 +135,9 @@ class Display:
                     pygame.draw.rect(copiedSurf, (60, 10, 0), (self.width * 0.25, self.height * 0.35, self.width * 0.5, self.height * 0.035), int(self.width * 0.004))
                 elif index > len(typeStr):
                     # Most it can go up at this stage is 5% at a time
+                    tickMark += 1
                     progressBarPercent += random.randint(0, 250)/10000
-                    pygame.draw.rect(copiedSurf, (120, 30, 0), (self.width * 0.25 + int(self.width * 0.004), self.height * 0.35 + int(self.width * 0.004), (self.width * 0.5 - int(self.width * 0.004) * 2) * progressBarPercent, self.height * 0.035 - int(self.width * 0.004) * 2))
+                    pygame.draw.rect(copiedSurf, oscillatingBarGlow((120, 30, 0), tickMark), (self.width * 0.25 + int(self.width * 0.004), self.height * 0.35 + int(self.width * 0.004), (self.width * 0.5 - int(self.width * 0.004) * 2) * progressBarPercent, self.height * 0.035 - int(self.width * 0.004) * 2))
                 self.SCREEN.blit(copiedSurf, (0, 0))
                 self.SCREEN.blit(subSurface.get(indexArr[index]), (self.width * 0.4125, self.height * 0.25))
                 pygame.display.update()
@@ -144,6 +156,7 @@ class Display:
             variance *= 1.25
 
             numCycles = 0
+            """Loop until the progress bar is complete"""
             while progressBarPercent != 1:
                 numCycles += 1
                 print(numCycles, progressBarPercent)
@@ -158,9 +171,10 @@ class Display:
                         interval = abs(math.sin(numCycles/2)) * interval
                     else:
                         interval /= 80
+                    tickMark += 1
                     progressBarPercent += random.randint(int(pow(numCycles, 1.7)), max(int(interval + pow(numCycles, 2)), int(pow(numCycles + 3, 1.7))))/10000
                     progressBarPercent = min(progressBarPercent, 1)
-                    pygame.draw.rect(copiedSurf, (120, 30, 0), (self.width * 0.25 + int(self.width * 0.004), self.height * 0.35 + int(self.width * 0.004), (self.width * 0.5 - int(self.width * 0.004) * 2) * progressBarPercent, self.height * 0.035 - int(self.width * 0.004) * 2))
+                    pygame.draw.rect(copiedSurf, oscillatingBarGlow((120, 30, 0), tickMark), (self.width * 0.25 + int(self.width * 0.004), self.height * 0.35 + int(self.width * 0.004), (self.width * 0.5 - int(self.width * 0.004) * 2) * progressBarPercent, self.height * 0.035 - int(self.width * 0.004) * 2))
                     self.SCREEN.blit(copiedSurf, (0, 0))
                     self.SCREEN.blit(subSurface.get(indexArr[index]), (self.width * 0.4125, self.height * 0.25))
                     pygame.display.update()
@@ -181,9 +195,10 @@ class Display:
                         interval = abs(math.sin(numCycles/2)) * interval
                     else:
                         interval /= 80
+                    tickMark += 1
                     progressBarPercent += random.randint(int(pow(numCycles, 1.7)), max(int(interval + pow(numCycles, 2)), int(pow(3 + numCycles, 1.7))))/10000
                     progressBarPercent = min(progressBarPercent, 1)
-                    pygame.draw.rect(copiedSurf, (120, 30, 0), (self.width * 0.25 + int(self.width * 0.004), self.height * 0.35 + int(self.width * 0.004), (self.width * 0.5 - int(self.width * 0.004) * 2) * progressBarPercent, self.height * 0.035 - int(self.width * 0.004) * 2))
+                    pygame.draw.rect(copiedSurf, oscillatingBarGlow((120, 30, 0), tickMark), (self.width * 0.25 + int(self.width * 0.004), self.height * 0.35 + int(self.width * 0.004), (self.width * 0.5 - int(self.width * 0.004) * 2) * progressBarPercent, self.height * 0.035 - int(self.width * 0.004) * 2))
                     self.SCREEN.blit(copiedSurf, (0, 0))
                     self.SCREEN.blit(subSurface.get(index), (self.width * 0.4125, self.height * 0.25))
                     pygame.display.update()
@@ -195,6 +210,21 @@ class Display:
                                 pygame.quit()
                                 sys.exit()
                         self.CLOCK.tick(self.monitorRefreshRate)
+
+            """Fade out screen some before transistion into menu loading"""
+            for run in range(0, 30):
+                desigTime = time.time() + 1/30
+                blackSurf = pygame.Surface((self.width, self.height), pygame.SRCALPHA)
+                blackSurf.fill((3, 2, 2, 30))
+                self.SCREEN.blit(blackSurf, (0, 0))
+                pygame.display.update()
+                while time.time() < desigTime:
+                    # Catch User Events just incase, so we don't get blue glowing circle; We won't actually be processing events here
+                    for userEvent in pygame.event.get():
+                        if userEvent.type == pygame.QUIT:
+                            pygame.quit()
+                            sys.exit()
+                    self.CLOCK.tick(self.monitorRefreshRate)
 
             # self.FONT.render_to(self.SCREEN, (self.width*0.4125, self.height*0.25), "Terminal Powering On", (self.pygameColorCodes.get("Light Gray")))
             # pygame.draw.rect(self.SCREEN, (255, 0, 0), (self.width * 0.525, 0, 2, self.height))
